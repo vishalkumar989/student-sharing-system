@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const ItemCard = ({ item }) => {
+    // Agar image_url hai, toh usko aache se format karo, warna placeholder dikhao
     const imageUrl = item.image_url
         ? `http://localhost:5000/${item.image_url.replace(/\\/g, '/')}`
         : `https://placehold.co/600x400?text=${item.name.replace(/\s/g, "+")}`;
@@ -13,6 +14,7 @@ const ItemCard = ({ item }) => {
                     src={imageUrl}
                     alt={item.name}
                     className="w-full h-48 object-cover"
+                    // Agar image load hone me error aaye, toh placeholder dikhao
                     onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/600x400?text=Image+Not+Found`}}
                 />
                 <div className="p-4 flex flex-col flex-grow">

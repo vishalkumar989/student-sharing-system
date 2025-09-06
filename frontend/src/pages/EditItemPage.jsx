@@ -18,7 +18,7 @@ const EditItemPage = () => {
         // Pehle item ka purana data fetch karo
         const fetchItemData = async () => {
             try {
-                const res = await axios.get(`https://student-sharing-api.onrender.com/items/${id}`);
+                const res = await axios.get(`http://localhost:5000/api/items/${id}`);
                 setFormData({
                     name: res.data.name,
                     description: res.data.description,
@@ -42,7 +42,7 @@ const EditItemPage = () => {
         e.preventDefault();
         const config = { headers: { 'x-auth-token': token } };
         try {
-            await axios.put(`https://student-sharing-api.onrender.com/items/${id}`, formData, config);
+            await axios.put(`http://localhost:5000/api/items/${id}`, formData, config);
             alert('Item updated successfully!');
             navigate('/my-items'); // Update ke baad My Items page par bhej do
         } catch (error) {

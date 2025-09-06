@@ -30,7 +30,7 @@ const AddItemPage = () => {
 
         try {
             const config = { headers: { 'x-auth-token': token, 'Content-Type': 'multipart/form-data' } };
-            await axios.post('https://student-sharing-api.onrender.com/items', formData, config);
+            await axios.post('http://localhost:5000/api/items', formData, config);
             toast.success('Item added successfully!');
             navigate('/');
         } catch (error) {

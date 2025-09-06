@@ -4,17 +4,14 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS Configuration (YAHI HAI ASLI, CORRECTED SOLUTION)
-const corsOptions = {
-  origin: '[https://whimsical-pasca-4db7a3.netlify.app](https://whimsical-pasca-4db7a3.netlify.app)', // <-- Ekdum saaf URL, bina kisi bracket ke
-  optionsSuccessStatus: 200 
-};
-
-app.use(cors(corsOptions)); // CORS ko naye options ke saath use karo
+// CORS for Local Development
+app.use(cors());
 
 // Middlewares
 app.use(express.json());
-// Make 'uploads' folder public
+
+// Make 'uploads' folder public (YAHI HAI ASLI SOLUTION)
+// Yeh Express ko batata hai ki 'uploads' folder ke andar ki files ko public access de do.
 app.use('/uploads', express.static('uploads'));
 
 // Routes

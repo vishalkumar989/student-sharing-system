@@ -15,7 +15,7 @@ const HomePage = () => {
     const fetchItems = async () => {
         setLoadingItems(true);
         try {
-            const res = await axios.get('http://localhost:5000/api/items');
+            const res = await axios.get('https://student-sharing-api.onrender.com/items');
             setItems(res.data);
         } catch (error) {
             console.error("Failed to fetch items:", error);
@@ -39,7 +39,7 @@ const HomePage = () => {
         }
         setLoadingItems(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/items/search?q=${searchTerm}`);
+            const res = await axios.get(`https://student-sharing-api.onrender.com/items/search?q=${searchTerm}`);
             setItems(res.data);
         } catch (error) {
             console.error("Search failed:", error);

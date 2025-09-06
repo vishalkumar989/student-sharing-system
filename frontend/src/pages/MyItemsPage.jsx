@@ -10,7 +10,7 @@ const MyItemsPage = () => {
     const fetchMyItems = async () => {
         const config = { headers: { 'x-auth-token': token } };
         try {
-            const res = await axios.get('http://localhost:5000/api/items/user/my-items', config);
+            const res = await axios.get('https://student-sharing-api.onrender.com/items/user/my-items', config);
             setMyItems(res.data);
         } catch (error) {
             console.error("Failed to fetch your items", error);
@@ -29,7 +29,7 @@ const MyItemsPage = () => {
         if (window.confirm('Are you sure you want to delete this item?')) {
             const config = { headers: { 'x-auth-token': token } };
             try {
-                await axios.delete(`http://localhost:5000/api/items/${itemId}`, config);
+                await axios.delete(`https://student-sharing-api.onrender.com/items/${itemId}`, config);
                 fetchMyItems(); 
             } catch (error) {
                 alert('Failed to delete item.');

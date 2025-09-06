@@ -4,9 +4,9 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS Configuration (YAHI HAI ASLI SOLUTION)
+// CORS Configuration (YAHI HAI ASLI, CORRECTED SOLUTION)
 const corsOptions = {
-  origin: '[https://whimsical-pasca-4db7a3.netlify.app](https://whimsical-pasca-4db7a3.netlify.app)', // <-- Yahan apni Netlify site ka URL daalo
+  origin: '[https://whimsical-pasca-4db7a3.netlify.app](https://whimsical-pasca-4db7a3.netlify.app)', // <-- Ekdum saaf URL, bina kisi bracket ke
   optionsSuccessStatus: 200 
 };
 

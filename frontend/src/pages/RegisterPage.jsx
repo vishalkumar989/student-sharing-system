@@ -19,7 +19,7 @@ const RegisterPage = () => {
         e.preventDefault();
         try {
             // Note: college_id is hardcoded for now
-            await axios.post('https://student-sharing-api.onrender.com', { ...formData, college_id: 1 });
+            await axios.post('http://localhost:5000/api/auth/register', { ...formData, college_id: 1 });
             toast.success('Registration successful! Please log in.');
             navigate('/login');
         } catch (error) {

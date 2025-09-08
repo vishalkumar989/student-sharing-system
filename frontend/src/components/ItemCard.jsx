@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+// Backend ka deployed URL
+const API_BASE = "https://student-sharing-api.onrender.com";
+
 const ItemCard = ({ item }) => {
-    // Agar image_url hai, toh usko aache se format karo, warna placeholder dikhao
+    // Agar image_url hai, toh Render wali URL use karo
     const imageUrl = item.image_url
-        ? `http://localhost:5000/${item.image_url.replace(/\\/g, '/')}`
+        ? `${API_BASE}/${item.image_url.replace(/\\/g, '/')}`
         : `https://placehold.co/600x400?text=${item.name.replace(/\s/g, "+")}`;
 
     return (
@@ -15,7 +18,10 @@ const ItemCard = ({ item }) => {
                     alt={item.name}
                     className="w-full h-48 object-cover"
                     // Agar image load hone me error aaye, toh placeholder dikhao
-                    onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/600x400?text=Image+Not+Found`}}
+                    onError={(e) => { 
+                        e.target.onerror = null; 
+                        e.target.src = `https://placehold.co/600x400?text=Image+Not+Found`;
+                    }}
                 />
                 <div className="p-4 flex flex-col flex-grow">
                     <h3 className="text-lg font-bold text-gray-800 truncate">{item.name}</h3>

@@ -1,41 +1,57 @@
+// In backend/controllers/authController.js
+
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Register Logic
 exports.register = async (req, res) => {
-    const { name, email, password, college_id } = req.body;
-    try {
-        const [userExists] = await db.query('SELECT email FROM users WHERE email = ?', [email]);
-        if (userExists.length > 0) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        await db.query('INSERT INTO users (name, email, password, college_id) VALUES (?, ?, ?, ?)', [name, email, hashedPassword, college_id]);
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        res.status(500).send('Server error');
-    }
+  const { name, email, password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const q = 'INSERT INTO users(name, email, password) VALUES($1, $2, $3) RETURNING *';
+    const values = [name, email, hashedPassword];
+    const { rows } = await db.query(q, values);
+    res.status(201).json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
 };
 
-// Login Logic
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (users.length === 0) {
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
-        const user = users[0];
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
-        const payload = { user: { id: user.id } };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
-        res.json({ token });
-    } catch (error) {
-        res.status(500).send('Server error');
+  const { email, password } = req.body;
+  try {
+    const q = 'SELECT * FROM users WHERE email = $1';
+    const { rows } = await db.query(q, [email]);
+
+    if (rows.length === 0) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
     }
+
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    const payload = {
+      user: {
+        id: user.id,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: 3600 },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
 };

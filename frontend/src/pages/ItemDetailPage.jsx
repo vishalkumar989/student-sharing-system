@@ -11,7 +11,7 @@ const ItemDetailPage = () => {
     useEffect(() => {
         const fetchItem = async () => {
             try {
-                const apiUrl = `http://localhost:5000/api/items/${id}`;
+                const apiUrl = `https://student-sharing-api.onrender.com/api/items/${id}`;
                 const res = await axios.get(apiUrl);
                 setItem(res.data);
             } catch (error) {

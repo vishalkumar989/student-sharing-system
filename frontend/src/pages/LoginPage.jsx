@@ -15,7 +15,7 @@ const LoginPage = () => {
     const onSubmit = async e => {
         e.preventDefault();
         try {
-            const apiUrl = 'http://localhost:5000/api/auth/login';
+            const apiUrl = 'https://student-sharing-api.onrender.com/api/auth/login';
             const res = await axios.post(apiUrl, formData);
 
             login(res.data.token); // <-- localStorage.setItem ki jagah context ka function use kiya

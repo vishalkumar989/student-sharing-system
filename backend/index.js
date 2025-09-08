@@ -4,14 +4,19 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS for Local Development
-app.use(cors());
+// CORS for Production: Only allow requests from your Vercel frontend
+const corsOptions = {
+  origin: 'https://student-sharing-system-42sd.vercel.app',
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
 
 // Middlewares
 app.use(express.json());
 
-// Make 'uploads' folder public (YAHI HAI ASLI SOLUTION)
-// Yeh Express ko batata hai ki 'uploads' folder ke andar ki files ko public access de do.
+// Make 'uploads' folder public
 app.use('/uploads', express.static('uploads'));
 
 // Routes

@@ -1,24 +1,19 @@
-// In backend/config/db.js
-
+// backend/config/db.js
 const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: 5432, // Default PostgreSQL port
+  connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false, // Neon requires SSL
+  },
 });
 
 pool.connect((err) => {
   if (err) {
-    console.error('Error connecting to PostgreSQL:', err.stack);
+    console.error('❌ Error connecting to PostgreSQL:', err.stack);
   } else {
-    console.log('Connected to PostgreSQL database');
+    console.log('✅ Connected to PostgreSQL database');
   }
 });
 

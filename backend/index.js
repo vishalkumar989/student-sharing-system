@@ -6,9 +6,17 @@ const app = express();
 
 // CORS for Production: Only allow requests from your Vercel frontend
 const corsOptions = {
-  origin: 'https://student-sharing-system-42sd.vercel.app',
-  optionsSuccessStatus: 200
+  origin: [
+    "http://localhost:5173", // for local Vite frontend
+    "https://student-sharing-system-42sd.vercel.app", // production main domain
+    "https://student-sharing-system-42sd-git-master-visha-kumars-projects.vercel.app" // your Vercel preview deployment
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
 };
+
+app.use(cors(corsOptions));
+
 
 app.use(cors(corsOptions));
 

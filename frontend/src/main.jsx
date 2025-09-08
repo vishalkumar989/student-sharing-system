@@ -1,16 +1,19 @@
+// In frontend/src/main.jsx
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext.jsx'; // <-- Naya Import
+import { AuthProvider } from './context/AuthContext.jsx';
+import axios from 'axios'; // Import axios
+
+// Set the base URL for all axios requests
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider> {/* <-- App ko wrap kiya */}
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </React.StrictMode>
 );

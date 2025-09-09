@@ -1,55 +1,159 @@
-const express = require('express');
-const router = express.Router();
-const { 
-    getAllItems, 
-    createItem, 
-    getItemById, 
-    getMyItems, 
-    deleteItem, 
-    updateItem, 
-    searchItems 
-} = require('../controllers/itemController');
-const authMiddleware = require('../middleware/authMiddleware');
-const multer = require('multer');
-const path = require('path');
+const db = require('../config/db');
 
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Images 'backend/uploads/' folder me save hongi
-    },
-    filename: function (req, file, cb) {
-        // Har file ko ek unique naam do taaki same naam ki files overwrite na ho
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+// Sabhi items ko fetch karne ka logic
+exports.getAllItems = async (req, res) => {
+    try {
+        // FIX: Changed from [items] to { rows } to work with PostgreSQL
+        const { rows } = await db.query(
+            `SELECT items.*, users.name AS seller_name 
+             FROM items 
+             JOIN users ON items.seller_id = users.id 
+             WHERE items.status = 'available' 
+             ORDER BY items.created_at DESC`
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
     }
-});
+};
 
-// Multer ka instance banao
-const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 1024 * 1024 * 5 }, // 5MB file size limit
-    fileFilter: function (req, file, cb) {
-        // Sirf image files (jpeg, png, etc.) ko allow karo
-        const filetypes = /jpeg|jpg|png|gif/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        if (mimetype && extname) {
-            return cb(null, true);
+// Naya item create karne ka logic (with image)
+exports.createItem = async (req, res) => {
+    const { name, description, price, item_type } = req.body;
+    const seller_id = req.user.id;
+    const image_url = req.file ? req.file.path : null;
+
+    try {
+        // FIX: Changed from [rows] to userResult and use userResult.rows
+        const userResult = await db.query('SELECT college_id FROM users WHERE id = $1', [seller_id]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ msg: 'User not found' });
         }
-        cb("Error: File upload only supports the following filetypes - " + filetypes);
+        const college_id = userResult.rows[0].college_id;
+        
+        // FIX: Changed from [result] to itemResult and use itemResult.rows
+        const itemResult = await db.query(
+            'INSERT INTO items (name, description, price, item_type, image_url, seller_id, college_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+            [name, description, price, item_type, image_url, seller_id, college_id]
+        );
+        res.status(201).json({ msg: 'Item created successfully', itemId: itemResult.rows[0].id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
     }
-});
+};
 
-// PUBLIC ROUTES
-router.get('/search', searchItems);
-router.get('/', getAllItems);
-router.get('/:id', getItemById);
+// Ek single item ko uski ID se fetch karne ka logic
+exports.getItemById = async (req, res) => {
+    try {
+        // FIX: Changed from [items] to { rows }
+        const { rows } = await db.query(
+            `SELECT items.*, users.name AS seller_name, users.email AS seller_email 
+             FROM items 
+             JOIN users ON items.seller_id = users.id 
+             WHERE items.id = $1`,
+            [req.params.id]
+        );
 
-// PRIVATE ROUTES (Token Zaroori Hai)
-// `upload.single('image')` middleware form me se 'image' naam ki file ko nikalega
-router.post('/', authMiddleware, upload.single('image'), createItem);
-router.get('/user/my-items', authMiddleware, getMyItems);
-router.delete('/:id', authMiddleware, deleteItem);
-router.put('/:id', authMiddleware, upload.single('image'), updateItem);
+        if (rows.length === 0) {
+            return res.status(404).json({ msg: 'Item not found' });
+        }
 
-module.exports = router;
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+};
+
+// Logged-in user ke saare items fetch karne ka logic
+exports.getMyItems = async (req, res) => {
+    try {
+        // FIX: Changed from [items] to { rows }
+        const { rows } = await db.query(
+            `SELECT * FROM items WHERE seller_id = $1 ORDER BY created_at DESC`,
+            [req.user.id]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+};
+
+// Ek item ko delete karne ka logic
+exports.deleteItem = async (req, res) => {
+    try {
+        // FIX: Changed from [items] to { rows }
+        const { rows } = await db.query('SELECT seller_id FROM items WHERE id = $1', [req.params.id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ msg: 'Item not found' });
+        }
+
+        const item = rows[0];
+        if (item.seller_id.toString() !== req.user.id.toString()) {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        await db.query('DELETE FROM items WHERE id = $1', [req.params.id]);
+
+        res.json({ msg: 'Item removed' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+};
+
+// Ek item ko update karne ka logic
+exports.updateItem = async (req, res) => {
+    const { name, description, price, item_type, status } = req.body;
+    try {
+        // FIX: Changed from [items] to { rows }
+        const { rows } = await db.query('SELECT seller_id FROM items WHERE id = $1', [req.params.id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ msg: 'Item not found' });
+        }
+
+        if (rows[0].seller_id.toString() !== req.user.id.toString()) {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+        
+        await db.query(
+            'UPDATE items SET name = $1, description = $2, price = $3, item_type = $4, status = $5 WHERE id = $6',
+            [name, description, price, item_type, status, req.params.id]
+        );
+
+        res.json({ msg: 'Item updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+};
+
+// Items ko naam se search karne ka logic
+exports.searchItems = async (req, res) => {
+    const query = req.query.q;
+
+    if (!query) {
+        return res.status(400).json({ msg: 'Search query is required' });
+    }
+
+    try {
+        const searchTerm = `%${query}%`;
+        // FIX: Changed from [items] to { rows } and LIKE to ILIKE
+        const { rows } = await db.query(
+            `SELECT items.*, users.name AS seller_name 
+             FROM items 
+             JOIN users ON items.seller_id = users.id 
+             WHERE items.status = 'available' AND items.name ILIKE $1`,
+            [searchTerm]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+};
